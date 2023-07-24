@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration.Json;
 using Azure;
 
 // Add Azure OpenAI package
-
+using Azure.AI.OpenAI;
 
 // Build a config object and retrieve user settings.
 IConfiguration config = new ConfigurationBuilder()
@@ -33,5 +33,26 @@ void GetSummaryFromOpenAI(string text)
     }
 
     // Initialize the Azure OpenAI client
+    OpenAIClient client = new OpenAIClient(new Uri(oaiEndpoint), new AzureKeyCredential(oaiKey));
+
+    // Build completion options object
+    ChatCompletionsOptions chatCompletionsOptions = new ChatCompletionsOptions()
+    {
+        Messages =
+        {
+        new ChatMessage(ChatRole.System, "You are a helpful assistant. Summarize the following text in 60 words or less."),
+        new ChatMessage(ChatRole.User, text),
+        },
+        MaxTokens = 120,
+        Temperature = 1f,
+    };
+
+    // Send request to Azure OpenAI model
+    ChatCompletions response = client.GetChatCompletions(
+        deploymentOrModelName: oaiModelName, 
+        chatCompletionsOptions);
+    string completion = response.Choices[0].Message.Content;
+
+    Console.WriteLine("Summary: " + completion + "\n");
     
 }  

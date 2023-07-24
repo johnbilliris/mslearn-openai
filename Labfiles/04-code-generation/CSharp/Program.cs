@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration.Json;
 using Azure;
 
 // Add Azure OpenAI package
+using Azure.AI.OpenAI;
 
 // Build a config object and retrieve user settings.
 IConfiguration config = new ConfigurationBuilder()
@@ -66,13 +67,32 @@ async Task GetResponseFromOpenAI(string prompt)
     }
     
     // Initialize the Azure OpenAI client
-    
+    OpenAIClient client = new OpenAIClient(new Uri(oaiEndpoint), new AzureKeyCredential(oaiKey));
+
     // Define chat prompts
     string systemPrompt = "You are a helpful AI assistant that helps programmers write code.";
     string userPrompt = prompt;
 
     // Create chat completion options
-    
+     var chatCompletionsOptions = new ChatCompletionsOptions()
+    {
+        Messages =
+        {
+            new ChatMessage(ChatRole.System, systemPrompt),
+            new ChatMessage(ChatRole.User, userPrompt)
+        },
+        Temperature = 0.7f,
+        MaxTokens = 1000,
+    };
+
+    // Get response from Azure OpenAI
+    Response<ChatCompletions> response = await client.GetChatCompletionsAsync(
+        oaiModelName,
+        chatCompletionsOptions
+    );
+
+    ChatCompletions completions = response.Value;
+    string completion = completions.Choices[0].Message.Content;
 
     // Write full response to console, if requested
     if (printFullResponse)
